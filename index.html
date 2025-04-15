@@ -8,52 +8,82 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f4f4f9;
+      background: #e8f0fe;
       margin: 0;
       padding: 20px;
       color: #333;
     }
     h1 {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+      color: #2b4c7e;
     }
     .container {
       max-width: 1200px;
       margin: 0 auto;
     }
-    .controls {
-      background: #fff;
+    .controls, .info-box {
+      background: #ffffff;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+    }
+    .info-box {
+      background-color: #fef6e4;
     }
     .product-card {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 10px;
+      background: #ffffff;
+      border: 2px solid #d1e3ff;
+      border-radius: 12px;
       padding: 15px;
       margin-bottom: 20px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .product-card:hover {
+      transform: scale(1.01);
     }
     .product-card img {
-      max-width: 200px;
+      max-width: 180px;
       display: block;
       margin-bottom: 10px;
-    }
-    .product-details {
-      margin-left: 20px;
+      border-radius: 8px;
     }
     .product-container {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
     }
+    .product-card h3 {
+      color: #1a3c6e;
+    }
+    .product-card p {
+      margin: 4px 0;
+    }
+    label, select {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>iPhone Installment Catalog</h1>
+
+    <div class="info-box">
+      <p><strong>VCARE</strong>: Optional extended warranty plan that adds 2 more years (Total: 4 years warranty).</p>
+      <p><strong>MPP</strong>: Mobile Protection Plan that covers screen cracks for 1 year.</p>
+      <p>If you choose <strong>hire purchase</strong> (AEON or Chailease), both VCARE and MPP are <strong>compulsory</strong>.</p>
+    </div>
+
     <div class="controls">
       <label for="paymentType">Select Payment Type:</label>
       <select id="paymentType">
@@ -109,6 +139,8 @@
             html += `<img src="${row.URL}" alt="${row.MODEL} ${row.CAPACITY}" />`;
           }
           html += `<h3>${row.MODEL} - ${row.CAPACITY}</h3>`;
+          html += `<p><strong>Original Price:</strong> RM ${row.NORMAL}</p>`;
+          html += `<p><strong>Promo Price:</strong> RM ${row.PROMO}</p>`;
 
           if (payment === 'cash') {
             html += `<p><strong>Cash Price:</strong> RM ${row.PROMO}</p>`;
@@ -118,6 +150,7 @@
             let addon = (parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0));
             let monthly = (parseFloat(row.PROMO) + addon) / tenure;
             html += `<p><strong>0% Credit Card Installment:</strong> RM ${monthly.toFixed(2)} / month for ${tenure} months</p>`;
+            html += `<p>Includes VCARE & MPP if selected.</p>`;
           } else if (payment === 'hire_purchase') {
             let base = parseFloat(row.PROMO) + parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0);
             let interest = base * 0.0125 * tenure;
@@ -125,7 +158,9 @@
             let monthly = Math.round(totalWithInterest / tenure);
             html += `<p><strong>Hire Purchase Monthly:</strong> RM ${monthly} / month for ${tenure} months</p>`;
             html += `<p>Total Repayment: RM ${totalWithInterest.toFixed(2)}</p>`;
+            html += `<p><em>Includes promo price + VCARE + MPP + flat interest (1.25% x ${tenure} months)</em></p>`;
           }
+
           html += `</div>`;
           catalog.innerHTML += html;
         });
