@@ -192,8 +192,23 @@
       border-radius: 999px;
       font-size: 0.75rem;
       font-weight: 500;
+    }
+
+    .badge.warranty {
       background: #dbeafe;
       color: var(--primary);
+    }
+
+    .badge.protection {
+      background: #fce7f3;
+      color: #db2777;
+    }
+
+    .coverage-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
     }
 
     .disclaimer {
@@ -292,6 +307,18 @@
       }
     }
 
+    function getCoverageBadges(paymentType, vcareActive, mppActive) {
+      const badges = [];
+      if (paymentType === 'hire_purchase') {
+        badges.push('<span class="badge warranty">4-Year Warranty</span>');
+        badges.push('<span class="badge protection">1-Year Screen Protection</span>');
+      } else if (paymentType === 'cc_installment') {
+        if (vcareActive) badges.push('<span class="badge warranty">4-Year Warranty</span>');
+        if (mppActive) badges.push('<span class="badge protection">1-Year Screen Protection</span>');
+      }
+      return badges.join('');
+    }
+
     function renderProducts() {
       const catalog = document.getElementById('catalog');
       catalog.innerHTML = '';
@@ -339,6 +366,12 @@
             <div class="badge">${paymentType === 'cc_installment' ? '0% Interest' : 'Hire Purchase'}</div>
           `;
         }
+
+        html += `
+          <div class="coverage-badges">
+            ${getCoverageBadges(paymentType, vcareActive, mppActive)}
+          </div>
+        `;
 
         html += `</div>`; // Close price-section
         card.innerHTML = html;
