@@ -32,12 +32,21 @@
     .info-box {
       background-color: #fef6e4;
     }
+    .product-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
     .product-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
       background: #ffffff;
       border: 2px solid #d1e3ff;
       border-radius: 12px;
       padding: 15px;
-      margin-bottom: 20px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
       transition: transform 0.2s;
     }
@@ -46,20 +55,27 @@
     }
     .product-card img {
       max-width: 180px;
-      display: block;
       margin-bottom: 10px;
       border-radius: 8px;
     }
-    .product-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
     .product-card h3 {
       color: #1a3c6e;
+      font-size: 18px;
+      margin: 10px 0;
+    }
+    .product-card .promo {
+      font-size: 22px;
+      color: #e63946;
+      font-weight: bold;
+    }
+    .product-card .monthly {
+      font-size: 20px;
+      color: #1d3557;
+      font-weight: bold;
     }
     .product-card p {
       margin: 4px 0;
+      font-size: 14px;
     }
     label, select {
       display: block;
@@ -140,7 +156,7 @@
           }
           html += `<h3>${row.MODEL} - ${row.CAPACITY}</h3>`;
           html += `<p><strong>Original Price:</strong> RM ${row.NORMAL}</p>`;
-          html += `<p><strong>Promo Price:</strong> RM ${row.PROMO}</p>`;
+          html += `<p class="promo">Promo Price: RM ${row.PROMO}</p>`;
 
           if (payment === 'cash') {
             html += `<p><strong>Cash Price:</strong> RM ${row.PROMO}</p>`;
@@ -149,16 +165,16 @@
           } else if (payment === 'cc_installment') {
             let addon = (parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0));
             let monthly = (parseFloat(row.PROMO) + addon) / tenure;
-            html += `<p><strong>0% Credit Card Installment:</strong> RM ${monthly.toFixed(2)} / month for ${tenure} months</p>`;
+            html += `<p class="monthly">RM ${monthly.toFixed(2)} / month × ${tenure}</p>`;
             html += `<p>Includes VCARE & MPP if selected.</p>`;
           } else if (payment === 'hire_purchase') {
             let base = parseFloat(row.PROMO) + parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0);
             let interest = base * 0.0125 * tenure;
             let totalWithInterest = base + interest;
             let monthly = Math.round(totalWithInterest / tenure);
-            html += `<p><strong>Hire Purchase Monthly:</strong> RM ${monthly} / month for ${tenure} months</p>`;
-            html += `<p>Total Repayment: RM ${totalWithInterest.toFixed(2)}</p>`;
-            html += `<p><em>Includes promo price + VCARE + MPP + flat interest (1.25% x ${tenure} months)</em></p>`;
+            html += `<p class="monthly">RM ${monthly} / month × ${tenure}</p>`;
+            html += `<p>Total: RM ${totalWithInterest.toFixed(2)}</p>`;
+            html += `<p><em>Includes promo price + VCARE + MPP + flat interest (1.25% × ${tenure} months)</em></p>`;
           }
 
           html += `</div>`;
