@@ -18,63 +18,60 @@
       margin-bottom: 30px;
     }
     .container {
-      max-width: 900px;
+      max-width: 1200px;
       margin: 0 auto;
+    }
+    .controls {
       background: #fff;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
     }
-    label, select {
-      display: block;
-      margin: 10px 0 5px;
-    }
-    select, input[type="file"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 20px;
-    }
-    #catalog img {
-      max-width: 100%;
-      margin: 20px 0;
-      border-radius: 8px;
-    }
-    .result-box {
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 8px;
+    .product-card {
+      background: #fff;
       border: 1px solid #ddd;
-      margin-top: 20px;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .product-card img {
+      max-width: 200px;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .product-details {
+      margin-left: 20px;
+    }
+    .product-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>iPhone Installment Catalog</h1>
-    <label for="modelSelect">Select Model:</label>
-    <select id="modelSelect"></select>
+    <div class="controls">
+      <label for="paymentType">Select Payment Type:</label>
+      <select id="paymentType">
+        <option value="cash">Cash (Credit/Debit)</option>
+        <option value="cc_installment">0% Credit Card Installment</option>
+        <option value="hire_purchase">Hire Purchase</option>
+      </select>
 
-    <label for="capacitySelect">Select Capacity:</label>
-    <select id="capacitySelect"></select>
+      <label for="tenureSelect">Select Tenure (months):</label>
+      <select id="tenureSelect">
+        <option value="6">6</option>
+        <option value="12">12</option>
+        <option value="24">24</option>
+        <option value="36">36</option>
+      </select>
+    </div>
 
-    <label for="paymentType">Select Payment Type:</label>
-    <select id="paymentType">
-      <option value="cash">Cash (Credit/Debit)</option>
-      <option value="cc_installment">0% Credit Card Installment</option>
-      <option value="hire_purchase">Hire Purchase</option>
-    </select>
-
-    <label for="tenureSelect">Select Tenure (months):</label>
-    <select id="tenureSelect">
-      <option value="6">6</option>
-      <option value="12">12</option>
-      <option value="24">24</option>
-      <option value="36">36</option>
-    </select>
-
-    <div id="catalog" class="result-box"></div>
+    <div id="catalog" class="product-container"></div>
   </div>
 
   <script>
@@ -87,64 +84,56 @@
           const workbook = XLSX.read(data, { type: 'array' });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
-          allData = XLSX.utils.sheet_to_json(sheet);
-          populateModels();
+          allData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          displayAllModels();
         });
     };
 
-    function populateModels() {
-      const modelSelect = document.getElementById('modelSelect');
-      const models = [...new Set(allData.map(row => row.MODEL))];
-      modelSelect.innerHTML = '<option>Select Model</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
-      modelSelect.addEventListener('change', populateCapacities);
-    }
-
-    function populateCapacities() {
-      const capacitySelect = document.getElementById('capacitySelect');
-      const selectedModel = document.getElementById('modelSelect').value;
-      const capacities = allData.filter(r => r.MODEL === selectedModel).map(r => r.CAPACITY);
-      capacitySelect.innerHTML = '<option>Select Capacity</option>' + capacities.map(c => `<option value="${c}">${c}</option>`).join('');
-      capacitySelect.addEventListener('change', displayCatalog);
-    }
-
-    function displayCatalog() {
-      const model = document.getElementById('modelSelect').value;
-      const capacity = document.getElementById('capacitySelect').value;
+    function displayAllModels() {
+      const catalog = document.getElementById('catalog');
+      catalog.innerHTML = '';
       const payment = document.getElementById('paymentType').value;
       const tenure = parseInt(document.getElementById('tenureSelect').value);
-      const row = allData.find(r => r.MODEL === model && r.CAPACITY === capacity);
-      if (!row) return;
 
-      let total = row.PROMO;
-      let details = `<h2>${model} - ${capacity}</h2>`;
-      if (row.URL && row.URL.toLowerCase().startsWith('http')) {
-        details += `<img src="${row.URL}" alt="${model} ${capacity}" />`;
-      }
+      const groupedModels = allData.reduce((acc, row) => {
+        if (!acc[row.MODEL]) acc[row.MODEL] = [];
+        acc[row.MODEL].push(row);
+        return acc;
+      }, {});
 
-      if (payment === 'cash') {
-        details += `<p><strong>Cash Price:</strong> RM ${row.PROMO}</p>`;
-        if (row.VCARE) details += `<p>+ VCARE (optional): RM ${row.VCARE}</p>`;
-        if (row.MPP) details += `<p>+ MPP (optional): RM ${row.MPP}</p>`;
-      }
-      else if (payment === 'cc_installment') {
-        let addon = (parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0));
-        let monthly = (parseFloat(row.PROMO) + addon) / tenure;
-        details += `<p><strong>0% Credit Card Installment:</strong> RM ${monthly.toFixed(2)} / month for ${tenure} months</p>`;
-      }
-      else if (payment === 'hire_purchase') {
-        let base = parseFloat(row.PROMO) + parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0);
-        let interest = base * 0.0125 * tenure;
-        let totalWithInterest = base + interest;
-        let monthly = Math.round(totalWithInterest / tenure);
-        details += `<p><strong>Hire Purchase Monthly:</strong> RM ${monthly} / month for ${tenure} months</p>`;
-        details += `<p>Total Repayment: RM ${totalWithInterest.toFixed(2)}</p>`;
-      }
+      for (const model in groupedModels) {
+        const variants = groupedModels[model];
+        variants.forEach(row => {
+          let html = `<div class="product-card">`;
+          if (row.URL && row.URL.toLowerCase().startsWith('http')) {
+            html += `<img src="${row.URL}" alt="${row.MODEL} ${row.CAPACITY}" />`;
+          }
+          html += `<h3>${row.MODEL} - ${row.CAPACITY}</h3>`;
 
-      document.getElementById('catalog').innerHTML = details;
+          if (payment === 'cash') {
+            html += `<p><strong>Cash Price:</strong> RM ${row.PROMO}</p>`;
+            if (row.VCARE) html += `<p>+ VCARE (optional): RM ${row.VCARE}</p>`;
+            if (row.MPP) html += `<p>+ MPP (optional): RM ${row.MPP}</p>`;
+          } else if (payment === 'cc_installment') {
+            let addon = (parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0));
+            let monthly = (parseFloat(row.PROMO) + addon) / tenure;
+            html += `<p><strong>0% Credit Card Installment:</strong> RM ${monthly.toFixed(2)} / month for ${tenure} months</p>`;
+          } else if (payment === 'hire_purchase') {
+            let base = parseFloat(row.PROMO) + parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0);
+            let interest = base * 0.0125 * tenure;
+            let totalWithInterest = base + interest;
+            let monthly = Math.round(totalWithInterest / tenure);
+            html += `<p><strong>Hire Purchase Monthly:</strong> RM ${monthly} / month for ${tenure} months</p>`;
+            html += `<p>Total Repayment: RM ${totalWithInterest.toFixed(2)}</p>`;
+          }
+          html += `</div>`;
+          catalog.innerHTML += html;
+        });
+      }
     }
 
-    document.getElementById('paymentType').addEventListener('change', displayCatalog);
-    document.getElementById('tenureSelect').addEventListener('change', displayCatalog);
+    document.getElementById('paymentType').addEventListener('change', displayAllModels);
+    document.getElementById('tenureSelect').addEventListener('change', displayAllModels);
   </script>
 </body>
 </html>
