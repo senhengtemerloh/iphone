@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iPhone Catalog Viewer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    label, select { margin: 5px 0; display: block; }
+    #catalog img { max-width: 200px; display: block; margin: 10px 0; }
+    table, th, td { border: 1px solid #ccc; border-collapse: collapse; padding: 8px; text-align: center; }
+    table { margin-top: 20px; width: 100%; max-width: 900px; }
+  </style>
+</head>
+<body>
+  <h1>iPhone Installment Catalog</h1>
+  <input type="file" id="upload" accept=".xlsx" />
+
+  <label for="modelSelect">Select Model:</label>
+  <select id="modelSelect"></select>
+
+  <label for="capacitySelect">Select Capacity:</label>
+  <select id="capacitySelect"></select>
+
+  <label for="paymentType">Select Payment Type:</label>
+  <select id="paymentType">
+    <option value="cash">Cash (Credit/Debit)</option>
+    <option value="cc_installment">0% Credit Card Installment</option>
+    <option value="hire_purchase">Hire Purchase</option>
+  </select>
+
+  <label for="tenureSelect">Select Tenure (months):</label>
+  <select id="tenureSelect">
+    <option value="6">6</option>
+    <option value="12">12</option>
+    <option value="24">24</option>
+    <option value="36">36</option>
+  </select>
+
+  <div id="catalog"></div>
+
+  <script>
+    let allData = [];
+
+    document.getElementById('upload').addEventListener('change', function(e) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        allData = XLSX.utils.sheet_to_json(sheet);
+        populateModels();
+      };
+      reader.readAsArrayBuffer(e.target.files[0]);
+    });
+
+    function populateModels() {
+      const modelSelect = document.getElementById('modelSelect');
+      const models = [...new Set(allData.map(row => row.MODEL))];
+      modelSelect.innerHTML = '<option>Select Model</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
+      modelSelect.addEventListener('change', populateCapacities);
+    }
+
+    function populateCapacities() {
+      const capacitySelect = document.getElementById('capacitySelect');
+      const selectedModel = document.getElementById('modelSelect').value;
+      const capacities = allData.filter(r => r.MODEL === selectedModel).map(r => r.CAPACITY);
+      capacitySelect.innerHTML = '<option>Select Capacity</option>' + capacities.map(c => `<option value="${c}">${c}</option>`).join('');
+      capacitySelect.addEventListener('change', displayCatalog);
+    }
+
+    function displayCatalog() {
+      const model = document.getElementById('modelSelect').value;
+      const capacity = document.getElementById('capacitySelect').value;
+      const payment = document.getElementById('paymentType').value;
+      const tenure = parseInt(document.getElementById('tenureSelect').value);
+      const row = allData.find(r => r.MODEL === model && r.CAPACITY === capacity);
+      if (!row) return;
+
+      let total = row.PROMO;
+      let details = `<h2>${model} - ${capacity}</h2>`;
+      if (row.URL) details += `<img src="${row.URL}" alt="${model} ${capacity}" />`;
+
+      if (payment === 'cash') {
+        details += `<p><strong>Cash Price:</strong> RM ${row.PROMO}</p>`;
+        if (row.VCARE) details += `<p>+ VCARE (optional): RM ${row.VCARE}</p>`;
+        if (row.MPP) details += `<p>+ MPP (optional): RM ${row.MPP}</p>`;
+      }
+      else if (payment === 'cc_installment') {
+        let addon = (parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0));
+        let monthly = (parseFloat(row.PROMO) + addon) / tenure;
+        details += `<p><strong>0% Credit Card Installment:</strong> RM ${monthly.toFixed(2)} / month for ${tenure} months</p>`;
+      }
+      else if (payment === 'hire_purchase') {
+        let base = parseFloat(row.PROMO) + parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0);
+        let interest = base * 0.0125 * tenure;
+        let totalWithInterest = base + interest;
+        let monthly = Math.round(totalWithInterest / tenure);
+        details += `<p><strong>Hire Purchase Monthly:</strong> RM ${monthly} / month for ${tenure} months</p>`;
+        details += `<p>Total Repayment: RM ${totalWithInterest.toFixed(2)}</p>`;
+      }
+
+      document.getElementById('catalog').innerHTML = details;
+    }
+
+    document.getElementById('paymentType').addEventListener('change', displayCatalog);
+    document.getElementById('tenureSelect').addEventListener('change', displayCatalog);
+  </script>
+</body>
+</html>
