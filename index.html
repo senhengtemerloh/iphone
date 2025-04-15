@@ -6,55 +6,91 @@
   <title>iPhone Catalog Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    label, select { margin: 5px 0; display: block; }
-    #catalog img { max-width: 200px; display: block; margin: 10px 0; }
-    table, th, td { border: 1px solid #ccc; border-collapse: collapse; padding: 8px; text-align: center; }
-    table { margin-top: 20px; width: 100%; max-width: 900px; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    label, select {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    select, input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    #catalog img {
+      max-width: 100%;
+      margin: 20px 0;
+      border-radius: 8px;
+    }
+    .result-box {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>iPhone Installment Catalog</h1>
-  <input type="file" id="upload" accept=".xlsx" />
+  <div class="container">
+    <h1>iPhone Installment Catalog</h1>
+    <label for="modelSelect">Select Model:</label>
+    <select id="modelSelect"></select>
 
-  <label for="modelSelect">Select Model:</label>
-  <select id="modelSelect"></select>
+    <label for="capacitySelect">Select Capacity:</label>
+    <select id="capacitySelect"></select>
 
-  <label for="capacitySelect">Select Capacity:</label>
-  <select id="capacitySelect"></select>
+    <label for="paymentType">Select Payment Type:</label>
+    <select id="paymentType">
+      <option value="cash">Cash (Credit/Debit)</option>
+      <option value="cc_installment">0% Credit Card Installment</option>
+      <option value="hire_purchase">Hire Purchase</option>
+    </select>
 
-  <label for="paymentType">Select Payment Type:</label>
-  <select id="paymentType">
-    <option value="cash">Cash (Credit/Debit)</option>
-    <option value="cc_installment">0% Credit Card Installment</option>
-    <option value="hire_purchase">Hire Purchase</option>
-  </select>
+    <label for="tenureSelect">Select Tenure (months):</label>
+    <select id="tenureSelect">
+      <option value="6">6</option>
+      <option value="12">12</option>
+      <option value="24">24</option>
+      <option value="36">36</option>
+    </select>
 
-  <label for="tenureSelect">Select Tenure (months):</label>
-  <select id="tenureSelect">
-    <option value="6">6</option>
-    <option value="12">12</option>
-    <option value="24">24</option>
-    <option value="36">36</option>
-  </select>
-
-  <div id="catalog"></div>
+    <div id="catalog" class="result-box"></div>
+  </div>
 
   <script>
     let allData = [];
 
-    document.getElementById('upload').addEventListener('change', function(e) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        allData = XLSX.utils.sheet_to_json(sheet);
-        populateModels();
-      };
-      reader.readAsArrayBuffer(e.target.files[0]);
-    });
+    window.onload = function () {
+      fetch('data.xlsx')
+        .then(res => res.arrayBuffer())
+        .then(data => {
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          allData = XLSX.utils.sheet_to_json(sheet);
+          populateModels();
+        });
+    };
 
     function populateModels() {
       const modelSelect = document.getElementById('modelSelect');
@@ -81,7 +117,9 @@
 
       let total = row.PROMO;
       let details = `<h2>${model} - ${capacity}</h2>`;
-      if (row.URL) details += `<img src="${row.URL}" alt="${model} ${capacity}" />`;
+      if (row.URL && row.URL.toLowerCase().startsWith('http')) {
+        details += `<img src="${row.URL}" alt="${model} ${capacity}" />`;
+      }
 
       if (payment === 'cash') {
         details += `<p><strong>Cash Price:</strong> RM ${row.PROMO}</p>`;
