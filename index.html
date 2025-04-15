@@ -81,12 +81,12 @@
       display: block;
       margin: 10px 0 5px;
     }
-    select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 20px;
+    select, input[type="checkbox"] {
+      margin-bottom: 10px;
+    }
+    .checkboxes {
+      display: none;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -107,6 +107,11 @@
         <option value="cc_installment">0% Credit Card Installment</option>
         <option value="hire_purchase">Hire Purchase</option>
       </select>
+
+      <div class="checkboxes" id="addonOptions">
+        <label><input type="checkbox" id="vcareOpt" /> Add VCARE (extended warranty)</label>
+        <label><input type="checkbox" id="mppOpt" /> Add MPP (screen protection)</label>
+      </div>
 
       <label for="tenureSelect">Select Tenure (months):</label>
       <select id="tenureSelect">
@@ -140,6 +145,12 @@
       catalog.innerHTML = '';
       const payment = document.getElementById('paymentType').value;
       const tenure = parseInt(document.getElementById('tenureSelect').value);
+      const showAddons = payment === 'cc_installment';
+
+      document.getElementById('addonOptions').style.display = showAddons ? 'block' : 'none';
+
+      const vcareChecked = document.getElementById('vcareOpt').checked;
+      const mppChecked = document.getElementById('mppOpt').checked;
 
       const groupedModels = allData.reduce((acc, row) => {
         if (!acc[row.MODEL]) acc[row.MODEL] = [];
@@ -163,10 +174,12 @@
             if (row.VCARE) html += `<p>+ VCARE (optional): RM ${row.VCARE}</p>`;
             if (row.MPP) html += `<p>+ MPP (optional): RM ${row.MPP}</p>`;
           } else if (payment === 'cc_installment') {
-            let addon = (parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0));
+            let addon = 0;
+            if (vcareChecked) addon += parseFloat(row.VCARE || 0);
+            if (mppChecked) addon += parseFloat(row.MPP || 0);
             let monthly = (parseFloat(row.PROMO) + addon) / tenure;
             html += `<p class="monthly">RM ${monthly.toFixed(2)} / month × ${tenure}</p>`;
-            html += `<p>Includes VCARE & MPP if selected.</p>`;
+            html += `<p>Includes Promo Price${vcareChecked ? ' + VCARE' : ''}${mppChecked ? ' + MPP' : ''}.</p>`;
           } else if (payment === 'hire_purchase') {
             let base = parseFloat(row.PROMO) + parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0);
             let interest = base * 0.0125 * tenure;
@@ -185,6 +198,8 @@
 
     document.getElementById('paymentType').addEventListener('change', displayAllModels);
     document.getElementById('tenureSelect').addEventListener('change', displayAllModels);
+    document.getElementById('vcareOpt').addEventListener('change', displayAllModels);
+    document.getElementById('mppOpt').addEventListener('change', displayAllModels);
   </script>
 </body>
 </html>
