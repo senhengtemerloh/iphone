@@ -3,203 +3,379 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>iPhone Catalog Viewer</title>
+  <title>iPhone Finance Calculator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #e8f0fe;
+    :root {
+      --primary: #2563eb;
+      --secondary: #1e40af;
+      --accent: #dc2626;
+      --background: #f8fafc;
+      --text: #1e293b;
+      --card-bg: #ffffff;
+      --warning: #fef3c7;
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 20px;
-      color: #333;
+      padding: 0;
     }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #2b4c7e;
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--background);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
     }
+
     .container {
       max-width: 1200px;
       margin: 0 auto;
     }
-    .controls, .info-box {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
     }
-    .info-box {
-      background-color: #fef6e4;
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
     }
+
+    .info-alert {
+      background: var(--warning);
+      padding: 1.25rem;
+      border-radius: 0.75rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #f59e0b;
+    }
+
+    .info-alert p {
+      margin-bottom: 0.5rem;
+    }
+
+    .info-alert strong {
+      color: #b45309;
+    }
+
+    .controls {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .filter-group {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      background: white;
+      transition: all 0.2s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .addons-container {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .checkbox-label:hover {
+      background: #e2e8f0;
+    }
+
     .product-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
     }
+
     .product-card {
+      background: var(--card-bg);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      height: 100%;
-      background: #ffffff;
-      border: 2px solid #d1e3ff;
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
+      gap: 1rem;
     }
+
     .product-card:hover {
-      transform: scale(1.01);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
-    .product-card img {
-      max-width: 180px;
-      margin-bottom: 10px;
-      border-radius: 8px;
+
+    .product-image {
+      width: 100%;
+      height: 200px;
+      object-fit: contain;
+      border-radius: 0.5rem;
+      background: #f8fafc;
+      padding: 1rem;
     }
-    .product-card h3 {
-      color: #1a3c6e;
-      font-size: 18px;
-      margin: 10px 0;
+
+    .product-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--primary);
     }
-    .product-card .promo {
-      font-size: 22px;
-      color: #e63946;
-      font-weight: bold;
+
+    .price-section {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 2px solid #f1f5f9;
     }
-    .product-card .monthly {
-      font-size: 20px;
-      color: #1d3557;
-      font-weight: bold;
+
+    .original-price {
+      text-decoration: line-through;
+      color: #64748b;
+      font-size: 0.9rem;
     }
-    .product-card p {
-      margin: 4px 0;
-      font-size: 14px;
+
+    .promo-price {
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0.5rem 0;
     }
-    label, select {
-      display: block;
-      margin: 10px 0 5px;
+
+    .monthly-payment {
+      color: var(--secondary);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0.75rem 0;
     }
-    select, input[type="checkbox"] {
-      margin-bottom: 10px;
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: #dbeafe;
+      color: var(--primary);
     }
-    .checkboxes {
-      display: none;
-      margin-top: 10px;
+
+    .disclaimer {
+      text-align: center;
+      color: #64748b;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 2px solid #e2e8f0;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .controls {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>iPhone Installment Catalog</h1>
+    <header class="header">
+      <h1>iPhone Finance Calculator</h1>
+      <p>Compare pricing options and find your perfect iPhone plan</p>
+    </header>
 
-    <div class="info-box">
-      <p><strong>VCARE</strong>: Optional extended warranty plan that adds 2 more years (Total: 4 years warranty).</p>
-      <p><strong>MPP</strong>: Mobile Protection Plan that covers screen cracks for 1 year.</p>
-      <p>If you choose <strong>hire purchase</strong> (AEON or Chailease), both VCARE and MPP are <strong>compulsory</strong>.</p>
+    <div class="info-alert">
+      <p><strong>⚠️ Important Notes:</strong></p>
+      <p><strong>VCARE:</strong> Extends warranty to 4 years total (optional for credit card installments)</p>
+      <p><strong>MPP:</strong> 1-year screen protection coverage</p>
+      <p><strong>Hire Purchase:</strong> Requires both VCARE & MPP (included automatically)</p>
     </div>
 
     <div class="controls">
-      <label for="paymentType">Select Payment Type:</label>
-      <select id="paymentType">
-        <option value="cash">Cash (Credit/Debit)</option>
-        <option value="cc_installment">0% Credit Card Installment</option>
-        <option value="hire_purchase">Hire Purchase</option>
-      </select>
-
-      <div class="checkboxes" id="addonOptions">
-        <label><input type="checkbox" id="vcareOpt" /> Add VCARE (extended warranty)</label>
-        <label><input type="checkbox" id="mppOpt" /> Add MPP (screen protection)</label>
+      <div class="filter-group">
+        <label for="paymentType">Payment Method</label>
+        <select id="paymentType">
+          <option value="cash">Cash/Debit Card</option>
+          <option value="cc_installment">0% Credit Card Installment</option>
+          <option value="hire_purchase">Hire Purchase</option>
+        </select>
       </div>
 
-      <label for="tenureSelect">Select Tenure (months):</label>
-      <select id="tenureSelect">
-        <option value="6">6</option>
-        <option value="12">12</option>
-        <option value="24">24</option>
-        <option value="36">36</option>
-      </select>
+      <div class="filter-group">
+        <label for="tenureSelect">Installment Period</label>
+        <select id="tenureSelect">
+          <option value="6">6 Months</option>
+          <option value="12">12 Months</option>
+          <option value="24">24 Months</option>
+          <option value="36">36 Months</option>
+        </select>
+      </div>
+
+      <div class="filter-group" id="addonOptions">
+        <label>Additional Coverage</label>
+        <div class="addons-container">
+          <label class="checkbox-label">
+            <input type="checkbox" id="vcareOpt"> VCARE (+2YR Warranty)
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="mppOpt"> MPP (Screen Protection)
+          </label>
+        </div>
+      </div>
     </div>
 
     <div id="catalog" class="product-container"></div>
+
+    <p class="disclaimer">* All prices in RM. Calculations are estimates. Actual terms may vary.</p>
   </div>
 
   <script>
-    let allData = [];
+    let productData = [];
 
-    window.onload = function () {
-      fetch('data.xlsx')
-        .then(res => res.arrayBuffer())
-        .then(data => {
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const sheet = workbook.Sheets[sheetName];
-          allData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-          displayAllModels();
-        });
-    };
+    const currencyFormatter = new Intl.NumberFormat('en-MY', {
+      style: 'currency',
+      currency: 'MYR',
+      minimumFractionDigits: 2
+    });
 
-    function displayAllModels() {
-      const catalog = document.getElementById('catalog');
-      catalog.innerHTML = '';
-      const payment = document.getElementById('paymentType').value;
-      const tenure = parseInt(document.getElementById('tenureSelect').value);
-      const showAddons = payment === 'cc_installment';
+    window.addEventListener('DOMContentLoaded', initApp);
 
-      document.getElementById('addonOptions').style.display = showAddons ? 'block' : 'none';
-
-      const vcareChecked = document.getElementById('vcareOpt').checked;
-      const mppChecked = document.getElementById('mppOpt').checked;
-
-      const groupedModels = allData.reduce((acc, row) => {
-        if (!acc[row.MODEL]) acc[row.MODEL] = [];
-        acc[row.MODEL].push(row);
-        return acc;
-      }, {});
-
-      for (const model in groupedModels) {
-        const variants = groupedModels[model];
-        variants.forEach(row => {
-          let html = `<div class="product-card">`;
-          if (row.URL && row.URL.toLowerCase().startsWith('http')) {
-            html += `<img src="${row.URL}" alt="${row.MODEL} ${row.CAPACITY}" />`;
-          }
-          html += `<h3>${row.MODEL} - ${row.CAPACITY}</h3>`;
-          html += `<p><strong>Original Price:</strong> RM ${row.NORMAL}</p>`;
-          html += `<p class="promo">Promo Price: RM ${row.PROMO}</p>`;
-
-          if (payment === 'cash') {
-            html += `<p><strong>Cash Price:</strong> RM ${row.PROMO}</p>`;
-            if (row.VCARE) html += `<p>+ VCARE (optional): RM ${row.VCARE}</p>`;
-            if (row.MPP) html += `<p>+ MPP (optional): RM ${row.MPP}</p>`;
-          } else if (payment === 'cc_installment') {
-            let addon = 0;
-            if (vcareChecked) addon += parseFloat(row.VCARE || 0);
-            if (mppChecked) addon += parseFloat(row.MPP || 0);
-            let monthly = (parseFloat(row.PROMO) + addon) / tenure;
-            html += `<p class="monthly">RM ${monthly.toFixed(2)} / month × ${tenure}</p>`;
-            html += `<p>Includes Promo Price${vcareChecked ? ' + VCARE' : ''}${mppChecked ? ' + MPP' : ''}.</p>`;
-          } else if (payment === 'hire_purchase') {
-            let base = parseFloat(row.PROMO) + parseFloat(row.VCARE || 0) + parseFloat(row.MPP || 0);
-            let interest = base * 0.0125 * tenure;
-            let totalWithInterest = base + interest;
-            let monthly = Math.round(totalWithInterest / tenure);
-            html += `<p class="monthly">RM ${monthly} / month × ${tenure}</p>`;
-            html += `<p>Total: RM ${totalWithInterest.toFixed(2)}</p>`;
-            html += `<p><em>Includes promo price + VCARE + MPP + flat interest (1.25% × ${tenure} months)</em></p>`;
-          }
-
-          html += `</div>`;
-          catalog.innerHTML += html;
-        });
+    async function initApp() {
+      try {
+        const response = await fetch('data.xlsx');
+        const buffer = await response.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        productData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        renderProducts();
+      } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load product data. Please try again later.');
       }
     }
 
-    document.getElementById('paymentType').addEventListener('change', displayAllModels);
-    document.getElementById('tenureSelect').addEventListener('change', displayAllModels);
-    document.getElementById('vcareOpt').addEventListener('change', displayAllModels);
-    document.getElementById('mppOpt').addEventListener('change', displayAllModels);
+    function renderProducts() {
+      const catalog = document.getElementById('catalog');
+      catalog.innerHTML = '';
+
+      const paymentType = document.getElementById('paymentType').value;
+      const tenure = parseInt(document.getElementById('tenureSelect').value);
+      const addonsVisible = paymentType === 'cc_installment';
+      
+      document.getElementById('addonOptions').style.display = addonsVisible ? 'block' : 'none';
+      document.getElementById('vcareOpt').disabled = paymentType === 'hire_purchase';
+      document.getElementById('mppOpt').disabled = paymentType === 'hire_purchase';
+
+      const vcareActive = addonsVisible ? document.getElementById('vcareOpt').checked : false;
+      const mppActive = addonsVisible ? document.getElementById('mppOpt').checked : false;
+
+      const groupedProducts = productData.reduce((acc, product) => {
+        const key = `${product.MODEL}-${product.CAPACITY}`;
+        if (!acc[key]) acc[key] = product;
+        return acc;
+      }, {});
+
+      Object.values(groupedProducts).forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        
+        let html = `
+          ${product.URL ? `<img class="product-image" src="${product.URL}" alt="${product.MODEL}">` : ''}
+          <h3 class="product-title">${product.MODEL} ${product.CAPACITY}</h3>
+          <div class="price-section">
+            <div class="original-price">${formatCurrency(product.NORMAL)}</div>
+            <div class="promo-price">${formatCurrency(product.PROMO)}</div>
+        `;
+
+        if (paymentType === 'cash') {
+          html += `
+            <div class="badge">One-time Payment</div>
+            ${product.VCARE ? `<div>VCARE: ${formatCurrency(product.VCARE)}</div>` : ''}
+            ${product.MPP ? `<div>MPP: ${formatCurrency(product.MPP)}</div>` : ''}
+          `;
+        } else {
+          const { monthlyPayment, total } = calculateInstallment(product, paymentType, tenure, vcareActive, mppActive);
+          html += `
+            <div class="monthly-payment">${formatCurrency(monthlyPayment)}/month</div>
+            <div class="text-sm">Over ${tenure} months (Total ${formatCurrency(total)})</div>
+            <div class="badge">${paymentType === 'cc_installment' ? '0% Interest' : 'Hire Purchase'}</div>
+          `;
+        }
+
+        html += `</div>`; // Close price-section
+        card.innerHTML = html;
+        catalog.appendChild(card);
+      });
+    }
+
+    function calculateInstallment(product, type, tenure, vcare, mpp) {
+      let base = parseFloat(product.PROMO);
+      let addons = 0;
+
+      if (type === 'cc_installment') {
+        if (vcare) addons += parseFloat(product.VCARE || 0);
+        if (mpp) addons += parseFloat(product.MPP || 0);
+      } else if (type === 'hire_purchase') {
+        addons += parseFloat(product.VCARE || 0) + parseFloat(product.MPP || 0);
+      }
+
+      const subtotal = base + addons;
+      const interest = type === 'hire_purchase' ? subtotal * 0.0125 * tenure : 0;
+      const total = subtotal + interest;
+      
+      return {
+        monthlyPayment: total / tenure,
+        total: total
+      };
+    }
+
+    function formatCurrency(value) {
+      return currencyFormatter.format(parseFloat(value) || '');
+    }
+
+    // Event Listeners
+    document.getElementById('paymentType').addEventListener('change', renderProducts);
+    document.getElementById('tenureSelect').addEventListener('change', renderProducts);
+    document.getElementById('vcareOpt').addEventListener('change', renderProducts);
+    document.getElementById('mppOpt').addEventListener('change', renderProducts);
   </script>
 </body>
 </html>
